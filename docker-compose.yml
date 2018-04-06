@@ -2,31 +2,32 @@ version: '3'
 
 services:
   db:
-    build: ./db
+    image: postgres:9.4
     restart: always
     volumes:
-      - /disco_duro/db:/var/lib/mysql
+      - /disco_duro/odoo-db-data:/var/lib/postgresql/data/pgdata
     environment:
-      - MYSQL_ROOT_PASSWORD=
-    env_file:
-      - db.env
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
 
   app:  
-    image: nextcloud:apache
+    image: odoo:11.0
     restart: always
     volumes:
-      - /disco_duro/nextcloud:/var/www/html
+      - /disco_duro/odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
     environment:
       - VIRTUAL_HOST=dattechs.pruebaclouds.com
       - LETSENCRYPT_HOST=dattechs.pruebaclouds.com
       - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
-      - MYSQL_HOST=db
-    env_file:
-      - db.env
     depends_on:
       - db
+     ports:
+      - 8069:8069
     networks:
-      - proxy-tier
+      - proxy-odoo
       - default
 
   proxy:
@@ -43,7 +44,7 @@ services:
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
-      - proxy-tier
+      - proxy-odoo
 
   letsencrypt-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion
@@ -54,16 +55,17 @@ services:
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - proxy-tier
+      - proxy-odoo
     depends_on:
       - proxy
 
 volumes:
   db:
-  nextcloud:
+  odoo-web-data:
+  odoo-db-data
   certs:
   vhost.d:
   html:
 
 networks:
-  proxy-tier:
+  proxy-odoo:
