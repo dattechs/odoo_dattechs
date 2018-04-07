@@ -1,12 +1,21 @@
-
 version: '2'
+
 services:
+  db:
+    image: postgres:9.4
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+
   web:
     image: odoo:10.0
+    restart: always
     depends_on:
       - db
-    ports:
-      - "8069:8069"
     volumes:
       - odoo-web-data:/var/lib/odoo
       - ./config:/etc/odoo
@@ -15,23 +24,17 @@ services:
       - VIRTUAL_HOST=odo.pruebaclouds.com
       - LETSENCRYPT_HOST=odo.pruebaclouds.com
       - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
+      - MYSQL_HOST=db
     networks:
       - proxy-tier
       - default
-  db:
-    image: postgres:9.4
-    environment:
-      - POSTGRES_PASSWORD=odoo
-      - POSTGRES_USER=odoo
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - odoo-db-data:/var/lib/postgresql/data/pgdata
   proxy:
     build: ./proxy
     restart: always
     ports:
       - 80:80
       - 443:443
+      - 8069:443
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
     volumes:
