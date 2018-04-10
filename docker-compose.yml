@@ -23,12 +23,12 @@ services:
       - ./config:/etc/odoo
       - ./addons:/mnt/extra-addons
     environment:
-      - VIRTUAL_HOST=erp.pruebaclouds.com/
-      - LETSENCRYPT_HOST=erp.pruebaclouds.com/
+      - VIRTUAL_HOST=odoo.pruebaclouds.com
+      - LETSENCRYPT_HOST=odoo.pruebaclouds.com
       - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
       - MYSQL_HOST=db
     networks:
-      - proxy-tier
+      - odoo-tier
       - default
   proxy:
     build: ./proxy
@@ -44,7 +44,7 @@ services:
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
-      - proxy-tier
+      - odoo-tier
 
   letsencrypt-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion
@@ -55,7 +55,7 @@ services:
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - proxy-tier
+      - odoo-tier
     depends_on:
       - proxy
 volumes:
@@ -66,4 +66,4 @@ volumes:
   html:
 
 networks:
-  proxy-tier:
+  odoo-tier:
