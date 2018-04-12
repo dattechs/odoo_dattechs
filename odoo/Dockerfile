@@ -43,7 +43,7 @@ RUN mkdir -p /mnt/extra-addons \
 VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
 
 # Expose Odoo services
-EXPOSE 80 441
+EXPOSE 80 443
 
 # Set the default config file
 ENV ODOO_RC /etc/odoo/odoo.conf
