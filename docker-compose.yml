@@ -1,66 +1,88 @@
-version: '3'
+# NextCLoud with MariaDB/MySQL all behind Nginx acting as a Reverse Proxy with SSL Encryption from LetsEcrypt.
+#
+# During initial NextCLoud setup, select "Storage & database" --> "Configure the database" --> "MySQL/MariaDB"
+# Database user: nextcloud 
+# Database password: nextcloud
+# Database name: nextcloud
+# Database host: replace "localhost" with "db" the same name as the data base container name.
+#
+
+version: '2'
 
 services:
+  proxy:
+    image: jwilder/nginx-proxy
+    container_name: proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./proxy/conf.d:/etc/nginx/conf.d
+      - ./proxy/vhost.d:/etc/nginx/vhost.d
+      - ./proxy/html:/usr/share/nginx/html
+      - ./proxy/certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy-tier
+    restart: always
+
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: letsencrypt-companion
+    volumes_from:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./proxy/certs:/etc/nginx/certs:rw
+    restart: always
+
+  web:
+    image: nginx
+    container_name: nextcloud_webserver
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    links:
+      - app
+    volumes_from:
+      - app
+    environment:
+      - VIRTUAL_HOST=od.pruebaclouds.com
+      - VIRTUAL_NETWORK=nginx-proxy
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=od.pruebaclouds.com
+      - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
+    networks:
+      - proxy-tier
+    restart: always
+
+  app:
+    build: ./odoo
+    container_name: odd_app
+    links:
+      - db
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+    networks:
+      - proxy-tier
+    restart: always
+    
   db:
     image: postgres:9.4
-    restart: always
     environment:
       - POSTGRES_PASSWORD=odoo
       - POSTGRES_USER=odoo
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
-  web:
-    build: ./odoo
-    restart: always
-    depends_on:
-      - db
-    volumes:
-      - odoo-web-data:/var/lib/odoo
-      - ./config:/etc/odoo
-      - ./addons:/mnt/extra-addons
-    environment:
-      - VIRTUAL_HOST=odoo.pruebaclouds.com
-      - LETSENCRYPT_HOST=odoo.pruebaclouds.com
-      - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
-      - MYSQL_HOST=db
     networks:
-      - odoo-tier
-      - default
-  proxy:
-    build: ./proxy
+      - proxy-tier
     restart: always
-    ports:
-      - 80:80
-      - 443:443
-    labels:
-      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
-    volumes:
-      - certs:/etc/nginx/certs:ro
-      - vhost.d:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      - odoo-tier
-
-  letsencrypt-companion:
-    image: jrcs/letsencrypt-nginx-proxy-companion
-    restart: always
-    volumes:
-      - certs:/etc/nginx/certs
-      - vhost.d:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - odoo-tier
-    depends_on:
-      - proxy
-volumes:
-  odoo-web-data:
-  odoo-db-data:
-  certs:
-  vhost.d:
-  html:
 
 networks:
-  odoo-tier:
+  proxy-tier:
+    external:
+      name: nginx-proxy
+
+
