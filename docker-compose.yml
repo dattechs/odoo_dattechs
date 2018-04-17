@@ -61,7 +61,7 @@ services:
     links:
       - db
     volumes:
-      - odoo-web-data:/var/lib/odoo
+      - /disco_duro/odoo-web-data:/var/lib/odoo
       - ./config:/etc/odoo
       - ./addons:/mnt/extra-addons
     networks:
@@ -75,7 +75,7 @@ services:
       - POSTGRES_USER=odoo
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data/pgdata
+      - /disco_duro/odoo-db-data:/var/lib/postgresql/data/pgdata
     networks:
       - proxy-tier
     restart: always
