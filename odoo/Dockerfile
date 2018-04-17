@@ -1,4 +1,4 @@
-FFROM debian:jessie
+FROM debian:jessie
 MAINTAINER Odoo S.A. <info@odoo.com>
 
 # Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
