@@ -1,20 +1,11 @@
-# Cuando ejecuto este docker-compose y voy odoo.pruebaclouds.com recibo este error: , la idea es que # la app Odoo navegue a traves del proxy. Por el contrario cuando voy a odoo.pruebaclouds.com:8069 si # me funciona, ¿ como tengo que configurar el docker-compose para que todo funcione por el proxy y 
-# asi navegar a traves de HTTPS?
-
-version: '3'
-
+version: '2'
 services:
   web:
-    build: ./odoo
+    image: odoo:10.0
     depends_on:
       - db
     ports:
       - "8069:8069"
-    environment:
-      - VIRTUAL_HOST=odoo.pruebaclouds.com
-      - LETSENCRYPT_HOST=odoo.pruebaclouds.com
-      - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
-      - MYSQL_HOST=db
     volumes:
       - odoo-web-data:/var/lib/odoo
       - ./config:/etc/odoo
@@ -27,44 +18,6 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
-
-  proxy:
-    build: ./proxy
-    restart: always
-    ports:
-      - 80:80
-      - 443:443
-    labels:
-      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
-    volumes:
-      - certs:/etc/nginx/certs:ro
-      - vhost.d:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      - proxy-tier
-
-  letsencrypt-companion:
-    image: jrcs/letsencrypt-nginx-proxy-companion
-    restart: always
-    volumes:
-      - certs:/etc/nginx/certs
-      - vhost.d:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - proxy-tier
-    depends_on:
-      - proxy
-
 volumes:
   odoo-web-data:
   odoo-db-data:
-  certs:
-  vhost.d:
-  html:
-
-networks:
-  proxy-tier:
-
-	
