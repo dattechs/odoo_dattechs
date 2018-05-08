@@ -1,21 +1,21 @@
-# Cuando ejecuto este docker-compose y voy odoo.pruebaclouds.com recibo este error: 502 Bad Gateway , # la idea es que # la app Odoo navegue a traves del proxy. Por el contrario cuando voy a 
-# odoo.pruebaclouds.com:8069 si me funciona, ¿ como tengo que configurar el docker-compose para que 
-# todo funcione por el proxy y 
+
+# Cuando ejecuto este docker-compose y voy odoo.pruebaclouds.com recibo este error: 502 Bad Gateway , # la idea es que # la app Odoo$
+# odoo.pruebaclouds.com:8069 si me funciona, ¿ como tengo que configurar el docker-compose para que
+# todo funcione por el proxy y
 # asi navegar a traves de HTTPS?
 
 version: '3'
 
 services:
-  web:
-    image: odoo:10.0
+  app:
+    build: ./odoo
     depends_on:
       - db
     ports:
       - "8069:8069"
     environment:
-      - VIRTUAL_HOST=odoo.pruebaclouds.com
-      - LETSENCRYPT_HOST=odoo.pruebaclouds.com
-      - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
+      - VIRTUAL_HOST=ododattechs.pruebaclouds.com
+      - VIRTUAL_PORT=8069
       - MYSQL_HOST=db
     volumes:
       - odoo-web-data:/var/lib/odoo
@@ -32,13 +32,15 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
-
   proxy:
     build: ./proxy
     restart: always
     ports:
       - 80:80
       - 443:443
+    environment:
+      - LETSENCRYPT_HOST=ododattechs.pruebaclouds.com
+      - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
     volumes:
@@ -48,7 +50,6 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - proxy-tier
-
   letsencrypt-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion
     restart: always
