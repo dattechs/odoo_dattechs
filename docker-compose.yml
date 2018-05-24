@@ -1,20 +1,19 @@
-
-# Cuando ejecuto este docker-compose y voy odoo.pruebaclouds.com recibo este error: 502 Bad Gateway , # la idea es que # la app Odoo$
-# odoo.pruebaclouds.com:8069 si me funciona, ¿ como tengo que configurar el docker-compose para que
-# todo funcione por el proxy y
-# asi navegar a traves de HTTPS?
+#El volumen odoo-web-data de el servicio app no se le puede assignar una direccion hay que dejarlo como esta en el docker-compose,
+# Mientras que el volumen odoo-db-data de la db si se puede, en este caso lo he puesto en el disco_duro
+# En el VIRTUAL_PORT, ahi que poner el puerto por defecto que tiene odoo
+# En el proxy he puesto otros puertos, ya que la maquina donde estamos corriendo este docker.compose los puertos 80 y 443 estan ocupados
 
 version: '3'
 
 services:
   app:
-    build: ./odoo
+    image: odoo:10.0
     depends_on:
       - db
     ports:
-      - "8069:8069"
+      - "8070:8069"
     environment:
-      - VIRTUAL_HOST=ododattechs.pruebaclouds.com
+      - VIRTUAL_HOST=odoodattechs.robotizate.com
       - VIRTUAL_PORT=8069
       - MYSQL_HOST=db
     volumes:
@@ -31,15 +30,16 @@ services:
       - POSTGRES_USER=odoo
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data/pgdata
+      - /disco_duro/odoo-db-data:/var/lib/postgresql/data/pgdata
+   
   proxy:
     build: ./proxy
     restart: always
     ports:
-      - 80:80
-      - 443:443
+      - 8080:80
+      - 4430:443
     environment:
-      - LETSENCRYPT_HOST=ododattechs.pruebaclouds.com
+      - LETSENCRYPT_HOST=odoodattechs.robotizate.com
       - LETSENCRYPT_EMAIL=andrescarlos88carpio@gmail.com
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
