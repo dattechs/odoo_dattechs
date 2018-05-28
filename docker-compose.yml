@@ -2,12 +2,13 @@
 # Mientras que el volumen odoo-db-data de la db si se puede, en este caso lo he puesto en el disco_duro
 # En el VIRTUAL_PORT, ahi que poner el puerto por defecto que tiene odoo
 # En el proxy he puesto otros puertos, ya que la maquina donde estamos corriendo este docker.compose los puertos 80 y 443 estan ocupados
+# para odoo11 hay que quitar el volumen de la app
 
 version: '3'
 
 services:
   app:
-    image: odoo:10.0
+    image: odoo:11.0
     depends_on:
       - db
     ports:
@@ -16,10 +17,6 @@ services:
       - VIRTUAL_HOST=odoodattechs.robotizate.com
       - VIRTUAL_PORT=8069
       - MYSQL_HOST=db
-    volumes:
-      - odoo-web-data:/var/lib/odoo
-      - ./config:/etc/odoo
-      - ./addons:/mnt/extra-addons
     networks:
       - proxy-tier
       - default
